@@ -1,0 +1,37 @@
+---
+
+# paths
+app_base_path: /var/www/myapps
+app_logs_path: /var/log/myapps
+app_tmp_path: /var/tmp/myapps
+app_deploy_tmp_path: /tmp/myapps/deploy
+app_rollback_tmp_path: /tmp/myapps/rollback
+
+# deploy packages bucket
+app_deploy_bucket: my-bucket
+
+# apps
+apps: {}
+
+# apps dict example
+# apps:
+#   test_api:
+#       server_name: api.myapp.net
+#       src: https://github.com/myapp/myapp.git
+#       version: master
+#       migrations: true
+#       jobs: true
+#       plugins:
+#         BEdita/AWS:
+#           src: https://github.com/myapp/aws.git
+#           version: master
+#           path: test_api
+ 
+#   test_manage:
+#       server_name: web.myapp.net
+#       src: https://github.com/myapp/web.git
+#       version: feat/branch-name
+#       bundle: true
+#       env:
+#         API: "https://api.myapp.net"
+#         API_KEY: "{{ api_keys.test_manage.api_key | default(omit)}}"

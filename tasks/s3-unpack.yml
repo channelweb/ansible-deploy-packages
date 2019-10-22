@@ -1,0 +1,49 @@
+---
+- name: list packages to deploy
+  become: yes
+  shell: "aws s3 ls s3://{{ app_deploy_bucket }}/{{ item.key }}/ | grep {{ item.key }} | head -n 1 | tr -s ' ' | cut -d' ' -f4"
+  with_dict: "{{ apps }}"
+  register: packages
+
+- fail: msg="Deploy package for '{{ item.item.key }}' was not found"
+  when: item.stdout|length <1
+  with_items: "{{ packages.results }}"
+
+- name: create temp `deploy_data` dictionary
+  set_fact:
+    deploy_data: "{{ deploy_data| default({}) | combine({item.item.key: {'pack_file': item.stdout, 'deploy_path': app_deploy_path + '/' + item.item.key + '/' + item.stdout.split('-')[1] | regex_replace('.tar.gz') + '/'}}, recursive=true) }}"
+  with_items: "{{ packages.results }}"
+
+# add `deploy_path` and `pack_file` keys to `apps` dictionary
+- set_fact:
+    apps: "{{ apps | combine(deploy_data, recursive=true) }}"
+  with_dict: "{{ apps }}"
+
+- name: copy package to host
+  become: yes
+  command: "aws s3 cp s3://{{ app_deploy_bucket }}/{{ item.key }}/{{ item.value.pack_file }} /tmp/ "
+  with_dict: "{{ apps }}"
+
+- name: ensure deploy dir exists and has correct permissions set
+  become: yes
+  file:
+    path: "{{ item.value.deploy_path }}"
+    state: directory
+    owner: "{{ app_deploy_user }}"
+    mode: 0755
+  with_dict: "{{ apps }}"
+
+- name: unpack package locally on host
+  become: yes
+  unarchive:
+    src: "/tmp/{{ item.value.pack_file }}"
+    dest: "{{ item.value.deploy_path }}"
+    remote_src: yes
+  with_dict: "{{ apps }}"
+
+- name: remove package files from host
+  become: yes
+  file: 
+    path: "/tmp/{{ item.value.pack_file }}" 
+    state: absent
+  with_dict: "{{ apps }}"

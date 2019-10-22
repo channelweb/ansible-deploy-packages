@@ -1,0 +1,77 @@
+---
+# 1a. Unpack to deploy folder from local (move package to S3)
+- include_tasks: unpack.yml
+  when: s3_deploy is not defined
+
+# 1b. Unpack from S3 bucket (either 1a. or 1b.)
+- include_tasks: s3-unpack.yml
+  when: s3_deploy is defined
+
+# 2. Execute migrations
+- include_tasks: migrations.yml
+
+# 3. Check target document root app folder: MUST be a symlink
+- name: check the current symlink
+  stat: path="{{ app_base_path }}/{{ item.key }}"
+  register: prev_app_paths
+  with_dict: "{{ apps }}"
+
+- name: remove the folder (only if it is a folder)
+  file: 
+    path: "{{ item.stat.path }}" 
+    state: absent
+  when: item.stat.isdir is defined and item.stat.isdir
+  with_items: "{{ prev_app_paths.results }}"
+
+- name: ensure app `logs` directory exists
+  become: yes
+  become_user: root
+  file:
+    path: "{{ app_logs_path }}/{{ item.key }}"
+    state: directory
+    owner: "{{ app_deploy_user }}"
+    mode: 0755
+  with_dict: "{{ apps }}"
+
+- name: ensure app `tmp` directory exists
+  become: yes
+  become_user: root
+  file:
+    path: "{{ app_tmp_path }}/{{ item.key }}"
+    state: directory
+    owner: "{{ app_deploy_user }}"
+    mode: 0755
+  with_dict: "{{ apps }}"
+
+# 4. Move symlink to newly deployed folder
+- name: update app symlink to deploy folder
+  file:
+    src: "{{ item.value.deploy_path }}"
+    dest: "{{ app_base_path }}/{{ item.key }}"
+    owner: "{{ app_deploy_user }}"
+    state: link
+  with_dict: "{{ apps }}"
+
+- name: empty cache
+  become: yes
+  become_user: "{{ app_user }}"
+  command: bin/cake cache clear_all
+  args:
+    chdir: "{{ app_base_path }}/{{ item.key }}"
+  with_dict: "{{ apps }}"
+
+# 5. Remove previous link target (may be restored from package in S3)
+- name: register new app paths
+  stat: path="{{ app_base_path }}/{{ item.key }}"
+  register: new_app_paths
+  with_dict: "{{ apps }}"
+
+- name: remove previous deploy target, if changed
+  file: 
+    path: "{{ item[0].stat.lnk_target }}" 
+    state: absent
+  when: item[0].stat.islnk is defined and item[0].stat.islnk and item[1].stat.lnk_target != item[0].stat.lnk_target
+  with_nested: 
+    - "{{ prev_app_paths.results }}"
+    - "{{ new_app_paths.results }}"
+
