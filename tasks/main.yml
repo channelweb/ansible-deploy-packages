@@ -70,8 +70,6 @@
   file: 
     path: "{{ item[0].stat.lnk_target }}" 
     state: absent
-  when: item[0].stat.islnk is defined and item[0].stat.islnk and item[1].stat.lnk_target != item[0].stat.lnk_target
-  with_nested: 
-    - "{{ prev_app_paths.results }}"
-    - "{{ new_app_paths.results }}"
+  when: (item.0.stat.islnk is defined) and (item.0.item.key == item.1.item.key) and item.0.stat.islnk and (item.1.stat.lnk_target != item.0.stat.lnk_target)
+  loop: "{{ prev_app_paths.results|product(new_app_paths.results)|list }}"
 
