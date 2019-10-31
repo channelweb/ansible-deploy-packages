@@ -11,24 +11,20 @@
   tags:
     - bedita-migrations
 
-# TEMP solution: should work iterating over {{ apps }} - TBD
-- name: run plugins migrations
-  become: yes
-  become_user: "{{ app_deploy_user }}"
-  command: "bin/cake migrations migrate -p {{ item.name }}"
-  args:
-    chdir: "{{ apps.get(item.path).get('deploy_path') }}"
-  when: item.path in apps
-  with_items: 
-    - name: OpenCorporation
-      path: opencorporation_api
-    - name: Doorway
-      path: doorway_api
-    - name: DockBooking
-      path: dockbooking_api
-  run_once: true
-  tags:
-    - bedita-migrations
+- name: set migration_plugins variable
+  set_fact:
+    migration_plugins: {}
+
+- set_fact:
+    migration_plugins: "{{ migration_plugins|combine(item.value.plugins, recursive=True) }}"
+  when: item.value.plugins is defined and item.value.migrations is defined
+  with_dict: "{{ apps }}"
+
+- include_tasks: plugins_migrations.yml
+  with_dict: "{{ migration_plugins }}"
+  when: plugin.value.migrations is defined
+  loop_control:
+    loop_var: plugin
 
 - name: seed api keys
   become: yes

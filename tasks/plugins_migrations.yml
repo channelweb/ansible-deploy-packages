@@ -1,0 +1,15 @@
+---
+
+- name: show migration plugin data
+  debug: var=plugin
+
+- name: run plugin migrations
+  become: yes
+  become_user: "{{ app_deploy_user }}"
+  command: "bin/cake migrations migrate -p {{ plugin.key }}"
+  args:
+    chdir: "{{ apps.get(plugin.value.path).get('deploy_path') }}"
+  when: plugin.value.migrations is defined
+  run_once: true
+  tags:
+    - bedita-migrations
