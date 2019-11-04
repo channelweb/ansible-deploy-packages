@@ -7,7 +7,9 @@
 - include_tasks: s3-unpack.yml
   when: s3_deploy is defined
 
-# 2. Execute migrations
+# 2. Configure apps and execute migrations
+- include_tasks: config.yml
+
 - include_tasks: migrations.yml
 
 # 3. Check target document root app folder: MUST be a symlink
