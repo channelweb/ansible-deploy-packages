@@ -45,6 +45,7 @@
 
 # 4. Move symlink to newly deployed folder
 - name: update app symlink to deploy folder
+  become: yes
   file:
     src: "{{ item.value.deploy_path }}"
     dest: "{{ app_base_path }}/{{ item.key }}"
@@ -67,6 +68,7 @@
   with_dict: "{{ apps }}"
 
 - name: remove previous deploy target, if changed
+  become: yes
   file: 
     path: "{{ item[0].stat.lnk_target }}" 
     state: absent
