@@ -1,18 +1,21 @@
 ---
 - name: list packages to archive
   become: yes
+  run_once: true
   shell: "aws s3 ls s3://{{ app_deploy_bucket }}/{{ item.key }}/ | grep {{ item.key }} | head -n 1 | tr -s ' ' | cut -d' ' -f4"
   with_dict: "{{ apps }}"
   register: packages
 
 - name: archive current packages on `archive` folder
   become: yes
+  run_once: true
   command: "aws s3 mv s3://{{ app_deploy_bucket }}/{{ item.item.key }}/{{ item.stdout }} s3://{{ app_deploy_bucket }}/{{ item.item.key }}/archive/"
   when: item.stdout|length >0
   with_items: "{{ packages.results }}"
 
 - name: copy package to host
   become: yes
+  run_once: true
   copy:
     src: "tmp/packages/{{ item.key }}-{{ pack_suffix }}.tar.gz"
     dest: "/tmp/"
@@ -20,5 +23,6 @@
 
 - name: move package file to S3
   become: yes
+  run_once: true
   command: "aws s3 mv /tmp/{{ item.key }}-{{ pack_suffix }}.tar.gz s3://{{ app_deploy_bucket }}/{{ item.key }}/"
   with_dict: "{{ apps }}"
