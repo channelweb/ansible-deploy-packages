@@ -1,29 +1,4 @@
 ---
-# Check deploy folder
-- name: ensure deploy dir exists and has correct permissions set
-  become: yes
-  file:
-    path: "{{ app_deploy_path }}/{{ item.key }}/{{ pack_suffix }}/"
-    state: directory
-    owner: "{{ app_deploy_user }}"
-    mode: 0755
-  with_dict: "{{ apps }}"
-
-- name: copy package to host
-  become: yes
-  copy:
-    src: "tmp/packages/{{ item.key }}-{{ pack_suffix }}.tar.gz"
-    dest: "/tmp/"
-  with_dict: "{{ apps }}"
-
-- name: unpack package locally on host
-  become: yes
-  unarchive:
-    src: "/tmp/{{ item.key }}-{{ pack_suffix }}.tar.gz"
-    dest: "{{ app_deploy_path }}/{{ item.key }}/{{ pack_suffix }}/"
-    remote_src: yes
-  with_dict: "{{ apps }}"
-
 - name: list packages to archive
   become: yes
   shell: "aws s3 ls s3://{{ app_deploy_bucket }}/{{ item.key }}/ | grep {{ item.key }} | head -n 1 | tr -s ' ' | cut -d' ' -f4"
@@ -35,6 +10,13 @@
   command: "aws s3 mv s3://{{ app_deploy_bucket }}/{{ item.item.key }}/{{ item.stdout }} s3://{{ app_deploy_bucket }}/{{ item.item.key }}/archive/"
   when: item.stdout|length >0
   with_items: "{{ packages.results }}"
+
+- name: copy package to host
+  become: yes
+  copy:
+    src: "tmp/packages/{{ item.key }}-{{ pack_suffix }}.tar.gz"
+    dest: "/tmp/"
+  with_dict: "{{ apps }}"
 
 - name: move package file to S3
   become: yes

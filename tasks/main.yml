@@ -1,16 +1,16 @@
 ---
-# 1a. Unpack to deploy folder from local (move package to S3)
-- include_tasks: unpack.yml
-  when: s3_deploy is not defined
+# 0. Archive to S3
+- include_tasks: s3-archive.yml
+  when: archive is defined
 
-# 1b. Unpack from S3 bucket (either 1a. or 1b.)
+# 1. Unpack from S3 bucket
 - include_tasks: s3-unpack.yml
-  when: s3_deploy is defined
 
 # 2. Configure apps and execute migrations
-- include_tasks: config.yml
-
-- include_tasks: migrations.yml
+- name: setup apps config files
+  include_tasks: config.yml
+- name: perform migrations
+  include_tasks: migrations.yml
 
 # 3. Check target document root app folder: MUST be a symlink
 - name: check the current symlink

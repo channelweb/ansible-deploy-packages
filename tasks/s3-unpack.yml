@@ -39,7 +39,6 @@
     src: "/tmp/{{ item.value.pack_file }}"
     dest: "{{ item.value.deploy_path }}"
     remote_src: yes
-    mode: preserve
   with_dict: "{{ apps }}"
 
 - name: remove package files from host
