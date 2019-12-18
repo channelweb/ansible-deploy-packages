@@ -1,30 +1,19 @@
 ---
-# 0. Archive to S3
+# 0. Archive to S3 or Filesystem
 - include_tasks: s3-archive.yml
-  when: archive is defined
+  when: archive is defined and app_deploy_bucket is defined
 
-# 1. Unpack from S3 bucket
+- include_tasks: fs-archive.yml
+  when: archive is defined and app_deploy_bucket is not defined
+
+# 1. Unpack from S3 bucket or Filesystem
 - include_tasks: s3-unpack.yml
+  when: app_deploy_bucket is defined
 
-# 2. Configure apps and execute migrations
-- name: setup apps config files
-  include_tasks: config.yml
-- name: perform migrations
-  include_tasks: migrations.yml
+- include_tasks: fs-unpack.yml
+  when: app_deploy_bucket is not defined
 
-# 3. Check target document root app folder: MUST be a symlink
-- name: check the current symlink
-  stat: path="{{ app_base_path }}/{{ item.key }}"
-  register: prev_app_paths
-  with_dict: "{{ apps }}"
-
-- name: remove the folder (only if it is a folder)
-  file: 
-    path: "{{ item.stat.path }}" 
-    state: absent
-  when: item.stat.isdir is defined and item.stat.isdir
-  with_items: "{{ prev_app_paths.results }}"
-
+# 2. Setup `logs` and `tmp` dirs, configure apps and execute migrations
 - name: ensure app `logs` directory exists
   become: yes
   become_user: root
@@ -44,6 +33,24 @@
     owner: "{{ app_deploy_user }}"
     mode: 0755
   with_dict: "{{ apps }}"
+
+- name: setup apps config files
+  include_tasks: config.yml
+- name: perform migrations
+  include_tasks: migrations.yml
+
+# 3. Check target document root app folder: MUST be a symlink
+- name: check the current symlink
+  stat: path="{{ app_base_path }}/{{ item.key }}"
+  register: prev_app_paths
+  with_dict: "{{ apps }}"
+
+- name: remove the folder (only if it is a folder)
+  file: 
+    path: "{{ item.stat.path }}" 
+    state: absent
+  when: item.stat.isdir is defined and item.stat.isdir
+  with_items: "{{ prev_app_paths.results }}"
 
 # 4. Move symlink to newly deployed folder
 - name: update app symlink to deploy folder

@@ -1,0 +1,23 @@
+---
+- name: (fs) ensure `app_deploy_packages_path` app subdirectories exist
+  become: yes
+  become_user: root
+  file:
+    path: "{{ app_deploy_packages_path }}/{{ item.key }}/archive"
+    state: directory
+    owner: "{{ app_deploy_user }}"
+    mode: 0755
+  with_dict: "{{ apps }}"
+
+- name: (fs) archive current packages on `archive` folder
+  become: yes
+  shell: "mv {{ app_deploy_packages_path }}/{{ item.key }}/*.tar.gz {{ app_deploy_packages_path }}/{{ item.key }}/archive/"
+  ignore_errors: true
+  with_dict: "{{ apps }}"
+
+- name: (fs) copy package to host
+  become: yes
+  copy:
+    src: "tmp/packages/{{ item.key }}-{{ pack_suffix }}.tar.gz"
+    dest: "{{ app_deploy_packages_path }}/{{ item.key }}/"
+  with_dict: "{{ apps }}"

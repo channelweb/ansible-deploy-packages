@@ -1,0 +1,23 @@
+---
+
+# add `deploy_path` and `pack_file` keys to `apps` dictionary
+- set_fact:
+    apps: "{{ apps | combine({item.key: {'pack_file': item.key + '-' + pack_suffix + '.tar.gz', 'deploy_path': app_deploy_path + '/' + item.key + '/' + pack_suffix}}, recursive=true) }}"
+  with_dict: "{{ apps }}"
+
+- name: (fs) ensure deploy dir exists and has correct permissions set
+  become: yes
+  file:
+    path: "{{ item.value.deploy_path }}"
+    state: directory
+    owner: "{{ app_deploy_user }}"
+    mode: 0755
+  with_dict: "{{ apps }}"
+
+- name: (fs) unpack package on deploy dir
+  become: yes
+  unarchive:
+    src: "{{ app_deploy_packages_path }}/{{ item.key }}/{{ item.value.pack_file }}"
+    dest: "{{ item.value.deploy_path }}"
+    remote_src: yes
+  with_dict: "{{ apps }}"

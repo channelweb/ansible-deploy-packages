@@ -4,11 +4,12 @@
 app_base_path: /var/www/myapps
 app_logs_path: /var/log/myapps
 app_tmp_path: /var/tmp/myapps
-app_deploy_tmp_path: /tmp/myapps/deploy
-app_rollback_tmp_path: /tmp/myapps/rollback
 
 # deploy packages bucket
-app_deploy_bucket: my-bucket
+# app_deploy_bucket: my-bucket
+
+# deploy packages fs path
+# app_deploy_packages_path: /var/www/mayapps/_packages
 
 # apps
 apps: {}
