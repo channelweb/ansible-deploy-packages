@@ -1,5 +1,5 @@
 ---
-- name: setup `.env` config files
+- name: setup (optional) `.env` config files
   become: yes
   template:
     src: "{{ app_templates_path }}/config/{{ item.key }}/.env.j2"
@@ -23,6 +23,17 @@
   tags:
     - bedita-config
 
+- name: setup (optional) `environment.php` config files
+  become: yes
+  template:
+    src: "{{ app_templates_path }}/config/{{ item.key }}/environment.php"
+    dest: "{{ item.value.deploy_path }}/config/environment.php"
+  ignore_errors: true
+  when: (app_templates_path + '/config/' + item.key + '/environment.php') is is_file
+  with_dict: "{{ apps }}"
+  tags:
+    - bedita-config
+
 - name: setup `paths.php` config files
   become: yes
   template:
@@ -34,7 +45,7 @@
   tags:
     - bedita-config
 
-- name: setup `robots.txt` if template is set
+- name: setup (optional) `robots.txt` if template is set
   become: yes
   template:
     src: "{{ app_templates_path }}/webroot/{{ item.key }}/robots.txt"
