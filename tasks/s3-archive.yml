@@ -6,6 +6,13 @@
   with_dict: "{{ apps }}"
   register: packages
 
+- name: (s3) cleanup archive folder
+  become: yes
+  run_once: true
+  shell: "aws s3 rm s3://{{ app_deploy_bucket }}/{{ item.item.key }}/archive/ --recursive"
+  when: item.stdout|length >0
+  with_items: "{{ packages.results }}"
+
 - name: (s3) archive current packages on `archive` folder
   become: yes
   run_once: true
