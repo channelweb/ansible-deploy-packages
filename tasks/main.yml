@@ -34,8 +34,12 @@
     mode: 0755
   with_dict: "{{ apps }}"
 
-- name: setup apps config files
+- name: setup `config` and `webroot` files
   include_tasks: config.yml
+  with_dict: "{{ apps }}"
+  loop_control:
+    loop_var: app
+
 - name: perform migrations
   include_tasks: migrations.yml
 

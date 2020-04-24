@@ -1,57 +1,29 @@
 ---
-- name: setup (optional) `.env` config files
-  become: yes
-  template:
-    src: "{{ app_templates_path }}/config/{{ item.key }}/.env.j2"
-    dest: "{{ item.value.deploy_path }}/config/.env"
-  ignore_errors: true
-  when: 
-    - item.value.env is defined
-    - (app_templates_path + '/config/' + item.key + '/.env.j2') is is_file
-  with_dict: "{{ apps }}"
-  tags:
-    - bedita-config
 
-- name: setup `app.php` config files
-  become: yes
-  template:
-    src: "{{ app_templates_path }}/config/{{ item.key }}/app.php"
-    dest: "{{ item.value.deploy_path }}/config/app.php"
-  ignore_errors: true
-  when: (app_templates_path + '/config/' + item.key + '/app.php') is is_file
-  with_dict: "{{ apps }}"
-  tags:
-    - bedita-config
+- local_action: stat path="{{ app_templates_path }}/config/{{ app.key }}"
+  become: no
+  register: cfg
 
-- name: setup (optional) `environment.php` config files
+- name: setup app config files
   become: yes
   template:
-    src: "{{ app_templates_path }}/config/{{ item.key }}/environment.php"
-    dest: "{{ item.value.deploy_path }}/config/environment.php"
-  ignore_errors: true
-  when: (app_templates_path + '/config/' + item.key + '/environment.php') is is_file
-  with_dict: "{{ apps }}"
-  tags:
-    - bedita-config
+    src: "{{ item }}"
+    dest: "{{ app.value.deploy_path }}/config/"
+  when: cfg.stat.isdir is defined and cfg.stat.isdir
+  with_fileglob:
+      - "{{ cfg.stat.path }}/*"
+      - "{{ cfg.stat.path }}/.*"
 
-- name: setup `paths.php` config files
-  become: yes
-  template:
-    src: "{{ app_templates_path }}/config/{{ item.key }}/paths.php"
-    dest: "{{ item.value.deploy_path }}/config/paths.php"
-  ignore_errors: true
-  when: (app_templates_path + '/config/' + item.key + '/paths.php') is is_file
-  with_dict: "{{ apps }}"
-  tags:
-    - bedita-config
+- local_action: stat path="{{ app_templates_path }}/webroot/{{ app.key }}"
+  become: no
+  register: www  
 
-- name: setup (optional) `robots.txt` if template is set
+- name: setup webroot files
   become: yes
   template:
-    src: "{{ app_templates_path }}/webroot/{{ item.key }}/robots.txt"
-    dest: "{{ item.value.deploy_path }}/webroot/robots.txt"
-  ignore_errors: true
-  when: (app_templates_path + '/webroot/' + item.key + '/robots.txt') is is_file
-  with_dict: "{{ apps }}"
-  tags:
-    - bedita-config
+    src: "{{ item }}"
+    dest: "{{ app.value.deploy_path }}/{{ app.key }}/webroot/"
+  when: www.stat.isdir is defined and www.stat.isdir
+  with_fileglob:
+    - "{{ www.stat.path }}/*"
+    - "{{ www.stat.path }}/.*"
