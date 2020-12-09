@@ -22,7 +22,7 @@
   become: yes
   template:
     src: "{{ item }}"
-    dest: "{{ app.value.deploy_path }}/{{ app.key }}/webroot/"
+    dest: "{{ app.value.deploy_path }}/webroot/"
   when: www.stat.isdir is defined and www.stat.isdir
   with_fileglob:
     - "{{ www.stat.path }}/*"
