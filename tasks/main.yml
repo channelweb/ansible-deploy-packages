@@ -43,6 +43,14 @@
 - name: perform migrations
   include_tasks: migrations.yml
 
+- name: optional pre-deploy commands, from deploy path
+  become: yes
+  shell: "{{ item.value.pre_deploy }}"
+  args:
+    chdir: "{{ item.value.deploy_path }}"
+  when: item.value.pre_deploy is defined
+  with_dict: "{{ apps }}"
+
 # 3. Check target document root app folder: MUST be a symlink
 - name: check the current symlink
   stat: path="{{ app_base_path }}/{{ item.key }}"
