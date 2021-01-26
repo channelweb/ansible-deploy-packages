@@ -1,8 +1,20 @@
 ---
-- name: run core migrations
+- name: run BEdita/Core migrations
   become: yes
   become_user: "{{ app_deploy_user }}"
   command: "bin/cake migrations migrate -p BEdita/Core"
+  args:
+    chdir: "{{ item.value.deploy_path }}"
+  run_once: true
+  when: item.value.migrations is defined
+  with_dict: "{{ apps }}"
+  tags:
+    - bedita-migrations
+
+- name: run main app migrations
+  become: yes
+  become_user: "{{ app_deploy_user }}"
+  command: "bin/cake migrations migrate"
   args:
     chdir: "{{ item.value.deploy_path }}"
   run_once: true
