@@ -18,7 +18,7 @@
   args:
     chdir: "{{ item.value.deploy_path }}"
   run_once: true
-  when: item.value.migrations is defined
+  when: item.value.migrations is defined and (item.value.deploy_path + '/config/Migrations') is is_dir
   with_dict: "{{ apps }}"
   tags:
     - bedita-migrations
