@@ -40,6 +40,15 @@
   loop_control:
     loop_var: app
 
+- name: set deploy path owner recursively
+  become: yes
+  file:
+    path: "{{ item.value.deploy_path }}"
+    owner: "{{ app_deploy_user }}"
+    group: "{{ app_deploy_user }}"
+    recurse: yes
+  with_dict: "{{ apps }}"
+
 - name: perform migrations
   include_tasks: migrations.yml
 
@@ -58,8 +67,8 @@
   with_dict: "{{ apps }}"
 
 - name: remove the folder (only if it is a folder)
-  file: 
-    path: "{{ item.stat.path }}" 
+  file:
+    path: "{{ item.stat.path }}"
     state: absent
   when: item.stat.isdir is defined and item.stat.isdir
   with_items: "{{ prev_app_paths.results }}"
@@ -90,8 +99,8 @@
 
 - name: remove previous deploy target, if changed
   become: yes
-  file: 
-    path: "{{ item[0].stat.lnk_target }}" 
+  file:
+    path: "{{ item[0].stat.lnk_target }}"
     state: absent
   when: (item.0.stat.islnk is defined) and (item.0.item.key == item.1.item.key) and item.0.stat.islnk and (item.1.stat.lnk_target != item.0.stat.lnk_target)
   loop: "{{ prev_app_paths.results|product(new_app_paths.results)|list }}"
