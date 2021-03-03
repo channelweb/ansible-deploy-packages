@@ -51,6 +51,7 @@
 
 - name: perform migrations
   include_tasks: migrations.yml
+  when: skip_migrations is not defined
 
 - name: optional pre-deploy commands, from deploy path
   become: yes
