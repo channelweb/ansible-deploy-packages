@@ -18,7 +18,7 @@
   args:
     chdir: "{{ item.value.deploy_path }}"
   run_once: true
-  when: item.value.migrations is defined and (item.value.deploy_path + '/config/Migrations') is is_dir
+  when: item.value.migrations is defined
   with_dict: "{{ apps }}"
   tags:
     - bedita-migrations
@@ -45,7 +45,7 @@
   args:
     chdir: "{{ apps.get(item.value.path).get('deploy_path') }}"
   environment:
-    BEDITA_API_KEY: "{{ item.value.api_key }}" 
+    BEDITA_API_KEY: "{{ item.value.api_key }}"
     BEDITA_APP_NAME: "{{ item.value.name }}"
   run_once: true
   when: item.value.path in apps
@@ -61,10 +61,10 @@
   args:
     chdir: "{{ apps.get(item.key).get('deploy_path') }}"
   environment:
-    BEDITA_ADMIN_USR: "{{ item.value.admin_usr }}" 
-    BEDITA_ADMIN_PWD: "{{ item.value.admin_pwd }}" 
+    BEDITA_ADMIN_USR: "{{ item.value.admin_usr }}"
+    BEDITA_ADMIN_PWD: "{{ item.value.admin_pwd }}"
   run_once: true
-  when: item.value.admin_usr is defined and item.value.admin_pwd is defined 
+  when: item.value.admin_usr is defined and item.value.admin_pwd is defined
   with_dict: "{{ apps_secrets }}"
   tags:
     - bedita
