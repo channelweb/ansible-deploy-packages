@@ -5,6 +5,9 @@ app_base_path: /var/www/myapps
 app_logs_path: /var/log/myapps
 app_tmp_path: /var/tmp/myapps
 
+# packages path
+packages_path: tmp/packages
+
 # deploy packages bucket
 # app_deploy_bucket: my-bucket
 
@@ -27,7 +30,7 @@ apps: {}
 #           src: https://github.com/myapp/aws.git
 #           version: master
 #           path: test_api
- 
+
 #   test_manage:
 #       server_name: web.myapp.net
 #       src: https://github.com/myapp/web.git
