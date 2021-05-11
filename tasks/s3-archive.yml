@@ -24,7 +24,7 @@
   become: yes
   run_once: true
   copy:
-    src: "tmp/packages/{{ item.key }}-{{ pack_suffix }}.tar.gz"
+    src: "{{ packages_path }}/{{ item.key }}-{{ pack_suffix }}.tar.gz"
     dest: "/tmp/"
   with_dict: "{{ apps }}"
 

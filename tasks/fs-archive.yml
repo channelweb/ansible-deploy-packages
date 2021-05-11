@@ -18,6 +18,6 @@
 - name: (fs) copy package to host
   become: yes
   copy:
-    src: "tmp/packages/{{ item.key }}-{{ pack_suffix }}.tar.gz"
+    src: "{{ packages_path }}/{{ item.key }}-{{ pack_suffix }}.tar.gz"
     dest: "{{ app_deploy_packages_path }}/{{ item.key }}/"
   with_dict: "{{ apps }}"
